@@ -1,3 +1,4 @@
+import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
@@ -18,13 +19,21 @@ public class FileUpload extends HttpServlet {
     private int fileUploads = 0;
     private File UPLOAD_DIRECTORY;
 
+   public void init(ServletConfig config) throws ServletException {
+       super.init(config);
+       UPLOAD_DIRECTORY = new File(getServletContext().getRealPath("") + "/" + "uploads");
+       UPLOAD_DIRECTORY.mkdir();
+   }
+
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+       /*
         //find formal way to initialize the upload directory
         if(fileUploads==0){
             UPLOAD_DIRECTORY = new File(getServletContext().getRealPath("") + "/" + "uploads");
             UPLOAD_DIRECTORY.mkdir();
         }
+        */
 
         //How to exclude this from the request
         for(Part part : req.getParts()) {
