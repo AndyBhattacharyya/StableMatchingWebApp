@@ -15,15 +15,21 @@ import java.io.InputStream;
 @MultipartConfig(fileSizeThreshold = 1024*1024, maxFileSize = 1024*1024*5, maxRequestSize = 1024*1024*5*5)
 public class FileUpload extends HttpServlet {
 
-    private final File UPLOAD_DIRECTORY = new File(getServletContext().getRealPath("") + "/" + "uploads");
     private int fileUploads = 0;
+    private File UPLOAD_DIRECTORY;
+
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //find formal way to initialize the upload directory
+        if(fileUploads==0){
+            UPLOAD_DIRECTORY = new File(getServletContext().getRealPath("") + "/" + "uploads");
+            UPLOAD_DIRECTORY.mkdir();
+        }
+
         //How to exclude this from the request
-        UPLOAD_DIRECTORY.mkdir();
         for(Part part : req.getParts()) {
-            //Becareful, it's possible generate a NullPointer Exception here
-            if(part.getContentType().equalsIgnoreCase("image/png")){
+            //look into ways to better handle the possible null pointer exception
+            if(part.getContentType()!= null && part.getContentType().equals("image/png")){
                 //begin processing
                 try(
                         InputStream img_data = part.getInputStream();
