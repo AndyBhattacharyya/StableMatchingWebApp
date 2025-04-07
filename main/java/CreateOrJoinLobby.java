@@ -1,12 +1,11 @@
 import MatchingGame.Lobby;
 import MatchingGame.User;
 import MatchingGame.UserCreateLobbyEvent;
+import MatchingGame.UserJoinLobbyEvent;
 import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import jakarta.websocket.RemoteEndpoint;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.File;
@@ -18,7 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CreateLobby extends HttpServlet {
+public class CreateOrJoinLobby extends HttpServlet {
 
     /*
     Data structure mapping lobbienames to Lobby objects
@@ -115,7 +114,16 @@ public class CreateLobby extends HttpServlet {
                  return;
              }
          }
-         userSession.setAttribute("user",new User(hostName, isMale, userFile));
+         if(hostName!=null && lobbyName!=null &&maxPlayers!=-1) {
+             userSession.setAttribute("user",new User(hostName, isMale, userFile));
+         }
+         else {
+             //Error with request, notify
+             res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+             return;
+         }
+
+
      }
      //Updating a user for session
      else{
@@ -152,13 +160,29 @@ public class CreateLobby extends HttpServlet {
                  return;
              }
          }
-         user.setGender(isMale);
-         user.setName(hostName);
+         if(hostName!=null && lobbyName!=null) {
+             user.setGender(isMale);
+             user.setName(hostName);
+         }
+         else {
+             //Error with request, notify
+             res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+             return;
+         }
      }
-     //Create lobby logic here. lobbyName and maxPlayers are always guarenteed
-     new UserCreateLobbyEvent(user,lobbyName,maxPlayers);
-     LOBBIES.put(lobbyName,user);
-     broadcast();
-     res.sendRedirect("/lobby.html");
+     //Join or Create lobby logic here depending on path
+         String action = req.getServletPath().substring(1);
+     if(action.equalsIgnoreCase("create")) {
+         //create lobby logic here
+         new UserCreateLobbyEvent(user, lobbyName, maxPlayers);
+         LOBBIES.put(lobbyName, user);
+     }
+     else if(action.equalsIgnoreCase("join")) {
+         //join lobby logic here
+         User lobby = LOBBIES.get(lobbyName);
+         new UserJoinLobbyEvent(user, lobby);
+     }
+         broadcast();
+         res.sendRedirect("/lobby.html");
     }
 }
