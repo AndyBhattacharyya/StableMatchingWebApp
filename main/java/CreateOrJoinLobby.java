@@ -4,6 +4,7 @@ import MatchingGame.UserCreateLobbyEvent;
 import MatchingGame.UserJoinLobbyEvent;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
 import jakarta.websocket.RemoteEndpoint;
 import org.json.simple.JSONObject;
@@ -17,13 +18,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+@MultipartConfig(fileSizeThreshold = 1024*1024, maxFileSize = 1024*1024*5, maxRequestSize = 1024*1024*5*5)
 public class CreateOrJoinLobby extends HttpServlet {
-
     /*
     Data structure mapping lobbienames to Lobby objects
     Data structure -> JSON to display all lobbies
      */
     public static HashMap<String, User> LOBBIES = new HashMap<>();
+    public static HashMap<String, HttpSession> userSessionsMap = new HashMap<>();
     private static Set<RemoteEndpoint.Basic> LISTENERS = new HashSet<>();
     public static void registerListener(RemoteEndpoint.Basic listener) throws IOException {
         LISTENERS.add(listener);
@@ -65,6 +67,8 @@ public class CreateOrJoinLobby extends HttpServlet {
 
      public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         //Parameters of request made by frontend
+         //Join or Create lobby logic here depending on path
+         String action = req.getServletPath().substring(1);
      String hostName = null;
      boolean isMale = false;
      String lobbyName = null;
@@ -83,81 +87,72 @@ public class CreateOrJoinLobby extends HttpServlet {
      //Creating a user for session
      if((user = (User)userSession.getAttribute("user")) == null) {
          userFile = new File(UPLOAD_DIRECTORY, "image"+ ++fileUploads +".png");
-         for(Part part : req.getParts()) {
-             //look into ways to better handle the possible null pointer exception
-             if (part.getContentType() != null && part.getContentType().equals("image/png")) {
-                 //begin processing file
-                 try (
-                         InputStream img_data = part.getInputStream();
-                         FileOutputStream fos = new FileOutputStream(userFile)
-                 ) {
-                     while (img_data.available() > 0) {
-                         fos.write(img_data.read());
-                         fos.flush();
-                     }
-                 } catch (IOException e) {
-                     System.out.println(e);
+         Part imgUpload = req.getPart("userFile");
+         //look into ways to better handle the possible null pointer exception
+         if (imgUpload.getContentType() != null && imgUpload.getContentType().equals("image/png")) {
+             //begin processing file
+             try (
+                     InputStream img_data = imgUpload.getInputStream();
+                     FileOutputStream fos = new FileOutputStream(userFile)
+             ) {
+                 while (img_data.available() > 0) {
+                     fos.write(img_data.read());
+                     fos.flush();
                  }
-             } else if ((hostName = part.getHeader("hostName")) != null) {
-             } else if (part.getHeader("hostGender") != null) {
-                 isMale = part.getHeader("hostGender").equalsIgnoreCase("male");
-             } else if ((lobbyName = part.getHeader("lobbyName")) != null) {
-             } else if (part.getHeader("maxPlayers") != null) {
-                 try {
-                     maxPlayers = Integer.parseInt(part.getHeader("maxPlayers"));
-                 } catch (NumberFormatException e) {
-                     maxPlayers = -1;
-                 }
-             } else {
-                 //Error with request, notify
-                 res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                 return;
+             } catch (IOException e) {
+                 System.out.println(e);
              }
          }
-         if(hostName!=null && lobbyName!=null &&maxPlayers!=-1) {
-             userSession.setAttribute("user",new User(hostName, isMale, userFile));
+
+          if ((hostName = req.getParameter("hostName")) != null) {}
+          if (req.getParameter("hostGender") != null) {
+             isMale = req.getParameter("hostGender").equalsIgnoreCase("male");
+         }
+          if ((lobbyName = req.getParameter("lobbyName")) != null) {}
+          if (req.getParameter("maxPlayers") != null) {
+             try {
+                 maxPlayers = Integer.parseInt(req.getParameter("maxPlayers"));
+             } catch (NumberFormatException e) {
+                 maxPlayers = -1;
+             }
+         }
+         if(hostName!=null && lobbyName!=null) {
+             user = new User(hostName, isMale, userFile);
+             userSession.setAttribute("user", user);
+             userSessionsMap.put(userSession.getId(), userSession);
          }
          else {
              //Error with request, notify
              res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
              return;
          }
-
-
      }
      //Updating a user for session
      else{
-
-         for(Part part : req.getParts()) {
-             //look into ways to better handle the possible null pointer exception
-             if (part.getContentType() != null && part.getContentType().equals("image/png")) {
-                 //begin updating file
-                 try (
-                         InputStream img_data = part.getInputStream();
-                         //Ensure that this overwrites
-                         FileOutputStream fos = new FileOutputStream(user.getUserUploadedFile())
-                 ) {
-                     while (img_data.available() > 0) {
-                         fos.write(img_data.read());
-                         fos.flush();
-                     }
-                 } catch (IOException e) {
-                     System.out.println(e);
-                 }
-             } else if ((hostName = part.getHeader("hostName")) != null) {
-             } else if (part.getHeader("hostGender") != null) {
-                 isMale = part.getHeader("hostGender").equalsIgnoreCase("male");
-             } else if ((lobbyName = part.getHeader("lobbyName")) != null) {
-             } else if (part.getHeader("maxPlayers") != null) {
-                 try {
-                     maxPlayers = Integer.parseInt(part.getHeader("maxPlayers"));
-                 } catch (NumberFormatException e) {
-                     maxPlayers = -1;
-                 }
-             } else {
-                 //Error with request, notify
-                 res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                 return;
+         Part imgUpload = req.getPart("userFile");
+         //begin updating file
+         try (
+                 InputStream img_data = imgUpload.getInputStream();
+                 //Ensure that this overwrites
+                 FileOutputStream fos = new FileOutputStream(user.getUserUploadedFile())
+         ) {
+             while (img_data.available() > 0) {
+                 fos.write(img_data.read());
+                 fos.flush();
+             }
+         } catch (IOException e) {
+             System.out.println(e);
+         }
+         if ((hostName = req.getParameter("hostName")) != null) {}
+         if (req.getParameter("hostGender") != null) {
+             isMale = req.getParameter("hostGender").equalsIgnoreCase("male");
+         }
+         if ((lobbyName = req.getParameter("lobbyName")) != null) {}
+         if (req.getParameter("maxPlayers") != null) {
+             try {
+                 maxPlayers = Integer.parseInt(req.getParameter("maxPlayers"));
+             } catch (NumberFormatException e) {
+                 maxPlayers = -1;
              }
          }
          if(hostName!=null && lobbyName!=null) {
@@ -170,19 +165,22 @@ public class CreateOrJoinLobby extends HttpServlet {
              return;
          }
      }
-     //Join or Create lobby logic here depending on path
-         String action = req.getServletPath().substring(1);
      if(action.equalsIgnoreCase("create")) {
          //create lobby logic here
-         new UserCreateLobbyEvent(user, lobbyName, maxPlayers);
-         LOBBIES.put(lobbyName, user);
+         if(maxPlayers!=-1) {
+             new UserCreateLobbyEvent(user, lobbyName, maxPlayers);
+             LOBBIES.put(lobbyName, user);
+         }
      }
      else if(action.equalsIgnoreCase("join")) {
          //join lobby logic here
          User lobby = LOBBIES.get(lobbyName);
-         new UserJoinLobbyEvent(user, lobby);
+         if(lobby != null) {
+             new UserJoinLobbyEvent(user, lobby);
+         }
      }
          broadcast();
          res.sendRedirect("/lobby.html");
     }
+
 }

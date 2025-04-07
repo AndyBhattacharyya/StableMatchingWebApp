@@ -1,5 +1,3 @@
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.*;
 import jakarta.websocket.server.*;
 
@@ -17,10 +15,12 @@ public class LobbyDisplay {
     public void onOpen(Session session) {
         System.out.println("WebSocket opened: " + session.getId());
         try {
-            CreateLobby.registerListener(session.getBasicRemote());
+            CreateOrJoinLobby.registerListener(session.getBasicRemote());
         } catch(IOException e) {
             System.out.println("Failed to register");
         }
+
+
 
     }
 
@@ -33,6 +33,6 @@ public class LobbyDisplay {
     @OnClose
     public void onClose(Session session) {
         System.out.println("WebSocket closed: " + session.getId());
-        CreateLobby.unregisterListener(session.getBasicRemote());
+        CreateOrJoinLobby.unregisterListener(session.getBasicRemote());
     }
 }
