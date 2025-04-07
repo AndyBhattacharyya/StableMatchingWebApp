@@ -1,39 +1,37 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        h2 {
-            color: #333;
-        }
-        form {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="file"] {
-            margin-bottom: 10px;
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Lobby System</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-<h2>Upload a File</h2>
-<form action="fileupload" method="post" enctype="multipart/form-data">
-    <input type="file" name="fileToUpload" id="fileToUpload">
-    <br>
-    <input type="submit" value="Upload File" name="submit">
-</form>
+<div class="container">
+    <h1>Game Lobbies</h1>
+
+    <div class="create-lobby">
+        <h2>Create New Lobby</h2>
+        <input type="text" id="hostName" placeholder="Your Name">
+        <input type="text" id="lobbyName" placeholder="Lobby Name">
+        <select id="maxPlayers">
+            <option value="">Select Max Players</option>
+            <option value="2">2 Players</option>
+            <option value="4">4 Players</option>
+            <option value="6">6 Players</option>
+            <option value="8">8 Players</option>
+            <option value="10">10 Players</option>
+        </select>
+        <button onclick="createLobby()">Create Lobby</button>
+    </div>
+
+    <div class="lobbies-list">
+        <h2>Available Lobbies</h2>
+        <input type="text" id="joinName" placeholder="Enter your name to join">
+        <div id="lobbiesList"></div>
+    </div>
+</div>
+<script src="client.js"></script>
 </body>
 </html>
