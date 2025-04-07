@@ -9,20 +9,59 @@
   <display-name>Archetype Created Web Application</display-name>
   <!--
   <servlet>
-    <servlet-name>ChatAPI</servlet-name>
-    <servlet-class>ExampleSSE</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>ChatAPI</servlet-name>
-    <url-pattern>/ChatAPI</url-pattern>
-  </servlet-mapping>
-  -->
-  <servlet>
-    <servlet-name>fileupload</servlet-name>
+    <servlet-name>upload</servlet-name>
     <servlet-class>FileUpload</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>fileupload</servlet-name>
-    <url-pattern>/fileupload</url-pattern>
+    <servlet-name>upload</servlet-name>
+    <url-pattern>/upload</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>leavelobby</servlet-name>
+    <servlet-class>LeaveLobby</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>leavelobby</servlet-name>
+    <url-pattern>/leave</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>readyup</servlet-name>
+    <servlet-class>Ready</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>readyup</servlet-name>
+    <url-pattern>/ready</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>selection</servlet-name>
+    <servlet-class>Selection</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>selection</servlet-name>
+    <url-pattern>/select</url-pattern>
+  </servlet-mapping>
+
+  -->
+  <servlet>
+    <servlet-name>createorjoinlobby</servlet-name>
+    <servlet-class>CreateOrJoinLobby</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>createorjoinlobby</servlet-name>
+    <url-pattern>/create</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>createorjoinlobby</servlet-name>
+    <url-pattern>/join</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>upload</servlet-name>
+    <servlet-class>FileUpload</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>upload</servlet-name>
+    <url-pattern>/upload</url-pattern>
   </servlet-mapping>
 </web-app>
