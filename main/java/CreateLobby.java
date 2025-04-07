@@ -4,15 +4,15 @@ import MatchingGame.UserCreateLobbyEvent;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.*;
 import jakarta.websocket.RemoteEndpoint;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,22 +54,111 @@ public class CreateLobby extends HttpServlet {
             listener.sendText(lobbies_rep.toJSONString());
         }
     }
+    private int fileUploads = 0;
+    private File UPLOAD_DIRECTORY;
 
- public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-     if(!Authentication.isAuthenticated(req) || req.getSession(false).getAttribute("user")==null){
-         //No session established
-         HttpSession user = req.getSession(true);
-         String username = req.getParameter("username");
-         if(username!=null)
-             user.setAttribute("user", new User(username));
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        //ensure directory is always empty
+        UPLOAD_DIRECTORY = new File(getServletContext().getRealPath("") + "/" + "uploads");
+        UPLOAD_DIRECTORY.mkdir();
+    }
+
+     public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        //Parameters of request made by frontend
+     String hostName = null;
+     boolean isMale = false;
+     String lobbyName = null;
+     int maxPlayers = -1;
+     File userFile;
+     /*
+     User required information to create a session
+     hostName
+     hostGender
+     lobbyName
+     maxPlayers
+     userFile
+      */
+     HttpSession userSession = req.getSession(true);
+     User user;
+     //Creating a user for session
+     if((user = (User)userSession.getAttribute("user")) == null) {
+         userFile = new File(UPLOAD_DIRECTORY, "image"+ ++fileUploads +".png");
+         for(Part part : req.getParts()) {
+             //look into ways to better handle the possible null pointer exception
+             if (part.getContentType() != null && part.getContentType().equals("image/png")) {
+                 //begin processing file
+                 try (
+                         InputStream img_data = part.getInputStream();
+                         FileOutputStream fos = new FileOutputStream(userFile)
+                 ) {
+                     while (img_data.available() > 0) {
+                         fos.write(img_data.read());
+                         fos.flush();
+                     }
+                 } catch (IOException e) {
+                     System.out.println(e);
+                 }
+             } else if ((hostName = part.getHeader("hostName")) != null) {
+             } else if (part.getHeader("hostGender") != null) {
+                 isMale = part.getHeader("hostGender").equalsIgnoreCase("male");
+             } else if ((lobbyName = part.getHeader("lobbyName")) != null) {
+             } else if (part.getHeader("maxPlayers") != null) {
+                 try {
+                     maxPlayers = Integer.parseInt(part.getHeader("maxPlayers"));
+                 } catch (NumberFormatException e) {
+                     maxPlayers = -1;
+                 }
+             } else {
+                 //Error with request, notify
+                 res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                 return;
+             }
+         }
+         userSession.setAttribute("user",new User(hostName, isMale, userFile));
      }
-     //Create lobby logic here
-     HttpSession session = req.getSession(false);
-     String lobbyname = req.getParameter("lobbyname");
-     int maxPlayers = Integer.parseInt(req.getParameter("maxPlayers"));
-     User user = (User)session.getAttribute("user");
-     new UserCreateLobbyEvent(user,lobbyname,maxPlayers);
-     LOBBIES.put(lobbyname,user);
+     //Updating a user for session
+     else{
+
+         for(Part part : req.getParts()) {
+             //look into ways to better handle the possible null pointer exception
+             if (part.getContentType() != null && part.getContentType().equals("image/png")) {
+                 //begin updating file
+                 try (
+                         InputStream img_data = part.getInputStream();
+                         //Ensure that this overwrites
+                         FileOutputStream fos = new FileOutputStream(user.getUserUploadedFile())
+                 ) {
+                     while (img_data.available() > 0) {
+                         fos.write(img_data.read());
+                         fos.flush();
+                     }
+                 } catch (IOException e) {
+                     System.out.println(e);
+                 }
+             } else if ((hostName = part.getHeader("hostName")) != null) {
+             } else if (part.getHeader("hostGender") != null) {
+                 isMale = part.getHeader("hostGender").equalsIgnoreCase("male");
+             } else if ((lobbyName = part.getHeader("lobbyName")) != null) {
+             } else if (part.getHeader("maxPlayers") != null) {
+                 try {
+                     maxPlayers = Integer.parseInt(part.getHeader("maxPlayers"));
+                 } catch (NumberFormatException e) {
+                     maxPlayers = -1;
+                 }
+             } else {
+                 //Error with request, notify
+                 res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                 return;
+             }
+         }
+         user.setGender(isMale);
+         user.setName(hostName);
+     }
+     //Create lobby logic here. lobbyName and maxPlayers are always guarenteed
+     new UserCreateLobbyEvent(user,lobbyName,maxPlayers);
+     LOBBIES.put(lobbyName,user);
      broadcast();
+     res.sendRedirect("/lobby.html");
     }
 }
