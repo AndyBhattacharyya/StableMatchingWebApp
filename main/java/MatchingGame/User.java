@@ -10,17 +10,29 @@ public class User {
     boolean isReady;
     boolean isUploading;
     boolean hasSelected;
+    boolean isMale;
     Lobby lobby;
     File userUploadedFile;
 
-    public User(String name){
+    public User(String name, boolean isMale, File userUploadedFile){
         this.name=name;
         this.isReady=false;
         this.isUploading=false;
         this.hasSelected=false;
         this.lobby = null;
-        this.userUploadedFile = null;
+        this.userUploadedFile = userUploadedFile;
+        this.isMale=isMale;
     }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void setGender(boolean isMale) {
+        this.isMale = isMale;
+    }
+    public File getUserUploadedFile() {
+        return this.userUploadedFile;
+    }
+
     public JSONObject jsonUser(){
         /*
         Return json representation of user object

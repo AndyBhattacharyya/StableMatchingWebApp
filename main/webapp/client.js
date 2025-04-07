@@ -31,66 +31,66 @@ socket.addEventListener("message", (event) => {
 
 
 function createLobby() {
-    const hostName = document.getElementById('hostName').value;
+    const hostName = document.getElementById('playerName').value;
+    const hostGender = document.getElementById('playerGender').value;
     const lobbyName = document.getElementById('lobbyName').value;
     const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
+    const userFile = document.getElementById('profilePic').files[0];
 
-    if (!hostName || !lobbyName || !maxPlayers) {
-        alert('Please fill in all fields');
+    if (!hostName || !lobbyName || !maxPlayers || !hostGender || !userFile) {
+        alert('Please fill in all fields including uploading a picture');
         return;
     }
+    const formData = new FormData();
+    formData.append('hostName', hostName);
+    formData.append('hostGender', hostGender);
+    formData.append('lobbyName', lobbyName);
+    formData.append('maxPlayers', maxPlayers);
+    formData.append('userFile', userFile);
 
-    /*
-    Change to only update on websockets
-    // JSON representation of the lobby
-    const newLobby = {
-        host: hostName,
-        lobbyName: lobbyName,
-        maxPlayers: maxPlayers,
-        currentPlayers: 1
-    };
-
-    lobbies.push(newLobby);
-    updateLobbiesList();
-     */
     let endpoint = url+"create";
     fetch(endpoint, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
         // Automatically converted to "username=example&password=password"
-        body: new URLSearchParams({ username: hostName, lobbyname: lobbyName, maxPlayers: maxPlayers }),
+        body: formData
         // ...
+    }).then(response => {
+        if(response.redirected){
+            window.location.href = response.url;
+        } else{
+            return
+        }
+
     });
     clearInputs();
 }
 
 function joinLobby(lobbyName) {
-    /*
-    const lobby = lobbies[index];
-    if (lobby.currentPlayers >= lobby.maxPlayers) {
-        alert('Lobby is full!');
+    const playerName = document.getElementById('playerName').value;
+    const hostGender = document.getElementById('playerGender').value;
+    const userFile = document.getElementById('profilePic').files[0];
+    if (!playerName || !lobbyName || !hostGender || !userFile) {
+        alert('Please fill in all fields including uploading a picture');
         return;
     }
-
-    lobby.currentPlayers++;
-    updateLobbiesList();
-     */
-    const playerName = document.getElementById('joinName').value.trim();
-    if (!playerName) {
-        alert('Please enter your name before joining');
-        return;
-    }
+    const formData = new FormData();
+    formData.append('hostName', playerName);
+    formData.append('hostGender', hostGender);
+    formData.append('lobbyName', lobbyName);
+    formData.append('userFile', userFile);
     let endpoint = url+"join";
     fetch(endpoint, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
         // Automatically converted to "username=example&password=password"
-        body: new URLSearchParams({ username: playerName, lobbyName: lobbyName}),
+        body: formData
         // ...
+    }).then(response => {
+        if(response.redirected){
+            window.location.href = response.url;
+        } else{
+            return
+        }
+
     });
 }
 

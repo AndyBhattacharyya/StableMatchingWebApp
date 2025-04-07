@@ -37,6 +37,7 @@ public class Lobby {
     private GAMESTATE gameState;
 
     public static void main(String[] args){
+        /*
         //Testing
         User u1 = new User("Andy");
         User u2 = new User("George");
@@ -46,7 +47,6 @@ public class Lobby {
         new UserJoinLobbyEvent(u2,u1);
         new UserJoinLobbyEvent(u3,u1);
         new UserJoinLobbyEvent(u4,u1);
-        /*
         Lobby json_rep = u1.lobby;
         System.out.println(json_rep);
         //Regular Lobby Flow
@@ -213,8 +213,8 @@ JSON Representation of Lobby
     public void UserCreateLobbyEventHandler(UserCreateLobbyEvent uEvent){
         //this check ensures that our lobby handles the associated event and not others
         if(this==uEvent.getUserLobby()){
-            System.out.println("User " + this.host + " has created this lobby: " + this);
             currentPlayers++;
+            System.out.println("User " + this.host + " has created this lobby: " + this);
         }
     }
 
