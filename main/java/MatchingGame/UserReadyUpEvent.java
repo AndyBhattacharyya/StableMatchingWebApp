@@ -6,7 +6,7 @@ public class UserReadyUpEvent extends Event {
     public UserReadyUpEvent(User user) {
         //perform action associated with event
         this.user = user;
-        user.isReady = true;
+        user.readyUp();
         EventDispatcher.dispatch(this);
     }
     //useful aux methods for events

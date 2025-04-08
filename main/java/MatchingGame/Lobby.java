@@ -3,6 +3,7 @@ package MatchingGame;
 import jakarta.websocket.RemoteEndpoint;
 import org.json.simple.JSONObject;
 
+import java.io.IOException;
 import java.io.PipedReader;
 import java.sql.Array;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.Set;
 
 
 enum GAMESTATE {
-    READYUP, UPLOAD, SELECT, DISPLAY
+    READYUP, SELECT, DISPLAY
     /*
     Encapsulate Game state transition as enums, directly modifying the Lobby object passed to it
     with methods
@@ -81,7 +82,6 @@ public class Lobby {
         this.maxPlayers =  maxPlayers;
         currentPlayers = 0;
         usersReady = 0;
-        usersUploaded = 0;
         usersSelected = 0;
         gameState = GAMESTATE.READYUP;
         //review anonymous inner class scoping: Lobby.this construct
@@ -91,6 +91,14 @@ public class Lobby {
         EventDispatcher.registerHandler(UserLeaveLobbyEvent.class, this::UserLeaveLobbyEventHandler);
         EventDispatcher.registerHandler(UserUploadedFileEvent.class, this::UserUploadedFileEventHandler);
         EventDispatcher.registerHandler(UserSelectedEvent.class, this::UserSelectedEventHandler);
+    }
+    public void broadcastLobbyToUsers() throws IOException {
+        for(User user: users){
+            try {
+                user.broadcastToUser().sendText(this.toString());
+            } catch (NullPointerException e) {}
+        }
+
     }
 
     public String toString(){
@@ -140,7 +148,6 @@ JSON Representation of Lobby
         json_lobby.put("users", json_users);
         return json_lobby.toJSONString();
     }
-
 
     //set up event handler instance method references
     public void UserSelectedEventHandler(UserSelectedEvent uEvent){
@@ -196,18 +203,25 @@ JSON Representation of Lobby
 
     public void UserReadyUpEventHandler(UserReadyUpEvent uEvent){
         if(this==uEvent.getUserLobby()){
-            System.out.println("User " + uEvent.getUser() + " is ready in lobby " + this);
-            usersReady++;
-            if(usersReady == maxPlayers && usersUploaded ==maxPlayers){
-                gameState = GAMESTATE.SELECT;
-                System.out.println(GAMESTATE.SELECT);
+            User tmp = uEvent.getUser();
+            if(tmp.isReady() && usersReady < maxPlayers) {
+                System.out.println("User " + uEvent.getUser() + " is ready in lobby " + this);
+                usersReady++;
             }
-            else if (usersReady == maxPlayers) {
-                gameState = GAMESTATE.UPLOAD;
-                System.out.println(GAMESTATE.UPLOAD);
-                System.out.println("Lobby " + this + " has begun");
+            else if(!tmp.isReady() && usersReady > 0){
+                System.out.println("User " + uEvent.getUser() + " is unready in lobby " + this);
+                usersReady--;
             }
 
+            if(usersReady == maxPlayers){
+                gameState = GAMESTATE.SELECT;
+            }
+            else if(gameState == GAMESTATE.SELECT){
+                gameState = GAMESTATE.READYUP;
+            }
+            try {
+                broadcastLobbyToUsers();
+            } catch(IOException e){}
         }
     }
     public void UserCreateLobbyEventHandler(UserCreateLobbyEvent uEvent){
@@ -215,18 +229,21 @@ JSON Representation of Lobby
         if(this==uEvent.getUserLobby()){
             currentPlayers++;
             System.out.println("User " + this.host + " has created this lobby: " + this);
+            try {
+                broadcastLobbyToUsers();
+            } catch(IOException e){}
         }
     }
 
     public void UserJoinLobbyEventHandler(UserJoinLobbyEvent uEvent){
         if(this==uEvent.getUserLobby()){
-            if(users.size() < 4 && users.add(uEvent.getUser())) {
+            if(users.size() < maxPlayers && users.add(uEvent.getUser())) {
                 System.out.println("User " + uEvent.getUser() + " has joined this lobby: " + this.host);
                 currentPlayers++;
-                if(uEvent.getUser().hasUploadedFile()){
-                    usersUploaded++;
-                }
                 System.out.println(this);
+                try {
+                    broadcastLobbyToUsers();
+                } catch(IOException e){}
             }
         }
     }

@@ -57,11 +57,11 @@
     <url-pattern>/join</url-pattern>
   </servlet-mapping>
   <servlet>
-    <servlet-name>upload</servlet-name>
-    <servlet-class>FileUpload</servlet-class>
+    <servlet-name>ready</servlet-name>
+    <servlet-class>Ready</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>upload</servlet-name>
-    <url-pattern>/upload</url-pattern>
+    <servlet-name>ready</servlet-name>
+    <url-pattern>/ready</url-pattern>
   </servlet-mapping>
 </web-app>
