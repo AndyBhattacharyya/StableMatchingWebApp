@@ -12,7 +12,7 @@ import java.util.Set;
 
 
 enum GAMESTATE {
-    READYUP, SELECT, DISPLAY
+    READYUP, SELECT, MATCHING, DISPLAY
     /*
     Encapsulate Game state transition as enums, directly modifying the Lobby object passed to it
     with methods
@@ -92,6 +92,10 @@ public class Lobby {
         EventDispatcher.registerHandler(UserUploadedFileEvent.class, this::UserUploadedFileEventHandler);
         EventDispatcher.registerHandler(UserSelectedEvent.class, this::UserSelectedEventHandler);
     }
+
+
+
+
     public void broadcastLobbyToUsers() throws IOException {
         for(User user: users){
             try {
@@ -99,6 +103,15 @@ public class Lobby {
             } catch (NullPointerException e) {}
         }
 
+    }
+    public User getUserByUsername(String userfind){
+        User ret = null;
+        for(User user: users){
+            if(user.getName().equalsIgnoreCase(userfind)){
+                ret = user;
+            }
+        }
+        return ret;
     }
 
     public String toString(){
@@ -139,8 +152,10 @@ JSON Representation of Lobby
         json_lobby.put("lobbyName", lobbyName);
         json_lobby.put("host", host.toString());
         json_lobby.put("maxPlayers", this.maxPlayers);
-        json_lobby.put("currentPlayers", this.currentPlayers);
         json_lobby.put("gameState", gameState.toString());
+        json_lobby.put("usersSelected", usersSelected);
+        json_lobby.put("usersReady", usersReady);
+        json_lobby.put("currentPlayers", this.currentPlayers);
         ArrayList<JSONObject> json_users = new ArrayList<>();
         for(User user: users) {
             json_users.add(user.jsonUser());
@@ -149,16 +164,42 @@ JSON Representation of Lobby
         return json_lobby.toJSONString();
     }
 
+
     //set up event handler instance method references
     public void UserSelectedEventHandler(UserSelectedEvent uEvent){
-        if(uEvent.getUserLobby() == this){
-            System.out.println(uEvent.getUser() + "has made their selection");
+        if(uEvent.getUserLobby() == this && gameState == GAMESTATE.SELECT){
+            User tmp = uEvent.getUser();
             usersSelected++;
             if(usersSelected == maxPlayers){
-                gameState = GAMESTATE.DISPLAY;
-                System.out.println(GAMESTATE.DISPLAY);
+                gameState = GAMESTATE.MATCHING;
             }
+            try{
+                broadcastLobbyToUsers();
+            } catch (IOException e) {}
+            System.out.println(uEvent.getUser() + "has made their selection in lobby: " + this);
         }
+        /*
+            User tmp = uEvent.getUser();
+            if(tmp.isReady() && usersReady < maxPlayers) {
+                System.out.println("User " + uEvent.getUser() + " is ready in lobby " + this);
+                usersReady++;
+            }
+            else if(!tmp.isReady() && usersReady > 0){
+                System.out.println("User " + uEvent.getUser() + " is unready in lobby " + this);
+                usersReady--;
+            }
+
+            if(usersReady == maxPlayers){
+                gameState = GAMESTATE.SELECT;
+            }
+            else if(gameState == GAMESTATE.SELECT){
+                gameState = GAMESTATE.READYUP;
+            }
+            try {
+                broadcastLobbyToUsers();
+            } catch(IOException e){}
+
+         */
     }
 
 
@@ -205,12 +246,16 @@ JSON Representation of Lobby
         if(this==uEvent.getUserLobby()){
             User tmp = uEvent.getUser();
             if(tmp.isReady() && usersReady < maxPlayers) {
-                System.out.println("User " + uEvent.getUser() + " is ready in lobby " + this);
                 usersReady++;
+                System.out.print("User " + uEvent.getUser() + " is ready in lobby ");
             }
             else if(!tmp.isReady() && usersReady > 0){
-                System.out.println("User " + uEvent.getUser() + " is unready in lobby " + this);
                 usersReady--;
+                if(tmp.hasSelected){
+                    tmp.unsetUserSelection();
+                    usersSelected--;
+                }
+                System.out.println("User " + uEvent.getUser() + " is unready in lobby ");
             }
 
             if(usersReady == maxPlayers){
@@ -222,6 +267,7 @@ JSON Representation of Lobby
             try {
                 broadcastLobbyToUsers();
             } catch(IOException e){}
+            System.out.println(this);
         }
     }
     public void UserCreateLobbyEventHandler(UserCreateLobbyEvent uEvent){

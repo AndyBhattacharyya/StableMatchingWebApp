@@ -3,6 +3,8 @@ package MatchingGame;
 
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.websocket.RemoteEndpoint;
 import org.json.simple.*;
@@ -11,6 +13,7 @@ public class User {
     private String name;
     boolean isReady;
     boolean hasSelected;
+    List<User> selection;
     boolean isMale;
     Lobby lobby;
     File userUploadedFile;
@@ -24,7 +27,20 @@ public class User {
         this.userUploadedFile = userUploadedFile;
         this.isMale=isMale;
         this.out = null;
+        this.selection = null;
     }
+    public void setUserSelection(List<User> selection){
+        this.selection = selection;
+        hasSelected=true;
+    }
+    public void unsetUserSelection(){
+        this.selection = null;
+        hasSelected=false;
+    }
+    public String getName(){
+        return this.name;
+    }
+
     public boolean getGender(){
         return isMale;
     }

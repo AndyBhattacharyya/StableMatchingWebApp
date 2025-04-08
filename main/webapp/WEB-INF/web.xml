@@ -36,7 +36,7 @@
 
   <servlet>
     <servlet-name>selection</servlet-name>
-    <servlet-class>Selection</servlet-class>
+    <servlet-class>Select</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>selection</servlet-name>
@@ -63,5 +63,13 @@
   <servlet-mapping>
     <servlet-name>ready</servlet-name>
     <url-pattern>/ready</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>selection</servlet-name>
+    <servlet-class>Select</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>selection</servlet-name>
+    <url-pattern>/select</url-pattern>
   </servlet-mapping>
 </web-app>
