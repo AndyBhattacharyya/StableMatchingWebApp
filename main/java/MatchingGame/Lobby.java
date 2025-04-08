@@ -6,9 +6,7 @@ import org.json.simple.JSONObject;
 import java.io.IOException;
 import java.io.PipedReader;
 import java.sql.Array;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 
 enum GAMESTATE {
@@ -33,6 +31,7 @@ public class Lobby {
     private int currentPlayers;
     private int usersSelected;
     private String lobbyName;
+    private ArrayList<JSONObject> matches_json;
 
 
     private GAMESTATE gameState;
@@ -84,6 +83,7 @@ public class Lobby {
         usersReady = 0;
         usersSelected = 0;
         gameState = GAMESTATE.READYUP;
+        matches_json = new ArrayList<>();
         //review anonymous inner class scoping: Lobby.this construct
         EventDispatcher.registerHandler(UserCreateLobbyEvent.class, this::UserCreateLobbyEventHandler);
         EventDispatcher.registerHandler(UserJoinLobbyEvent.class, this::UserJoinLobbyEventHandler);
@@ -93,8 +93,63 @@ public class Lobby {
         EventDispatcher.registerHandler(UserSelectedEvent.class, this::UserSelectedEventHandler);
     }
 
+    public boolean createMatches(ArrayList<JSONObject> matches_json){
+        List<User> boys = new ArrayList<>();
+        List<User> girls = new ArrayList<>();
+        for(User user: users){
+            if(user.isMale)
+                boys.add(user);
+            else
+                girls.add(user);
+        }
+        //requires even amount of girls and boys
+        if(boys.size()!=girls.size())
+            return false;
 
-
+        while(true){
+            int matches = 0;
+            User unmatchedUser = null;
+            for(User user: boys){
+                if(user.isMatched())
+                    matches++;
+                else{
+                    if(!(unmatchedUser=user).hasSelected)
+                        return false;
+                    break;
+                }
+            }
+            //matching completed
+            if(matches == boys.size()){
+                //JSON construction
+                for(User boy: boys){
+                    JSONObject tmpmatch = new JSONObject();
+                    tmpmatch.put("user1", boy.jsonUser());
+                    tmpmatch.put("user2", boy.getMatch().jsonUser());
+                    tmpmatch.put("exclaimer", "Best Match");
+                    matches_json.add(tmpmatch);
+                }
+                return true;
+            }
+            //Still unmatched boy, won't produce NullPointerException
+            List<User> unmatchedUserPref = unmatchedUser.getUserSelection();
+            for(User candidate: unmatchedUserPref){
+                if(!candidate.isMatched()){
+                    unmatchedUser.setMatch(candidate);
+                    candidate.setMatch(unmatchedUser);
+                    break;
+                }
+                else{
+                    User candidate_match = candidate.getMatch();
+                    if(candidate.getUserSelection().indexOf(unmatchedUser)<candidate.getUserSelection().indexOf(candidate_match)){
+                        candidate_match.setMatch(null);
+                        unmatchedUser.setMatch(candidate);
+                        candidate.setMatch(unmatchedUser);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     public void broadcastLobbyToUsers() throws IOException {
         for(User user: users){
@@ -104,6 +159,7 @@ public class Lobby {
         }
 
     }
+
     public User getUserByUsername(String userfind){
         User ret = null;
         for(User user: users){
@@ -161,6 +217,8 @@ JSON Representation of Lobby
             json_users.add(user.jsonUser());
         }
         json_lobby.put("users", json_users);
+        if(gameState==GAMESTATE.DISPLAY)
+            json_lobby.put("matches", matches_json);
         return json_lobby.toJSONString();
     }
 
@@ -177,6 +235,18 @@ JSON Representation of Lobby
                 broadcastLobbyToUsers();
             } catch (IOException e) {}
             System.out.println(uEvent.getUser() + "has made their selection in lobby: " + this);
+            if(gameState == GAMESTATE.MATCHING){
+                if(createMatches(this.matches_json)){
+                    gameState = GAMESTATE.DISPLAY;
+                    try{
+                        broadcastLobbyToUsers();
+                    } catch (IOException e) {}
+                }
+                else{
+                    System.out.println("Something went wrong");
+                    matches_json.clear();
+                }
+            }
         }
         /*
             User tmp = uEvent.getUser();
@@ -261,7 +331,7 @@ JSON Representation of Lobby
             if(usersReady == maxPlayers){
                 gameState = GAMESTATE.SELECT;
             }
-            else if(gameState == GAMESTATE.SELECT){
+            else if(gameState == GAMESTATE.SELECT || gameState == GAMESTATE.MATCHING){
                 gameState = GAMESTATE.READYUP;
             }
             try {

@@ -209,3 +209,55 @@ body {
     padding: 6px 12px;
     margin: 4px 0;
 }
+#matchModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+}
+
+#matchContent {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 800px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.match-profiles {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.match-profiles .profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.match-profiles img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+    margin-bottom: 10px;
+}
+
+#closeMatchModal {
+    float: right;
+    background: crimson;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}

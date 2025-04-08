@@ -18,6 +18,8 @@ public class User {
     Lobby lobby;
     File userUploadedFile;
     RemoteEndpoint.Basic out;
+    private boolean isMatched;
+    private User match;
 
     public User(String name, boolean isMale, File userUploadedFile){
         this.name=name;
@@ -28,6 +30,25 @@ public class User {
         this.isMale=isMale;
         this.out = null;
         this.selection = null;
+        this.isMatched=false;
+        this.match = null;
+
+    }
+    public boolean isMatched(){
+        return this.isMatched;
+    }
+    public void setMatch(User match){
+        this.match = match;
+        if(this.match==null)
+            isMatched=false;
+        else
+            isMatched=true;
+    }
+    public User getMatch(){
+        return this.match;
+    }
+    public List<User> getUserSelection(){
+        return this.selection;
     }
     public void setUserSelection(List<User> selection){
         this.selection = selection;

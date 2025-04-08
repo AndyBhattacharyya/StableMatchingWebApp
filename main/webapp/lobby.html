@@ -29,6 +29,20 @@
         </div>
     </div>
 
+    <!-- 🆕 Match Modal -->
+    <div id="matchModal" style="display: none;">
+        <div id="matchContent">
+            <button id="closeMatchModal" onclick="closeMatchModal()">X</button>
+            <h2 style="text-align:center;" id="matchExclaimer"></h2>
+            <div class="match-profiles" id="matchProfiles">
+                <!-- Profiles will be injected here -->
+            </div>
+            <div style="text-align:center;">
+                <button onclick="nextMatch()">Next Match</button>
+            </div>
+        </div>
+    </div>
+
 
 
     <div class="player-side right" id="femalePlayers">

@@ -2,6 +2,8 @@ let messages = [];
 let players;
 let ranking_json;
 let isMale;
+let matches = [];
+let oppositeGenderPlayers;
 
 //websocket endpoint to receive events when a lobby is created/modified
 const lobby_API = "http://localhost:8080/lobby";
@@ -25,6 +27,12 @@ socket.addEventListener("message", (event) => {
         updateGameStateMessage(json_lobby.gameState, json_lobby.usersSelected, json_lobby.maxPlayers);
     else if(json_lobby.gameState === 'MATCHING')
         updateGameStateMessage(json_lobby.gameState, 0, 0)
+    else if(json_lobby.gameState === 'DISPLAY'){
+        for(let m of json_lobby.matches){
+            matches.push(m);
+        }
+        updateGameStateMessage(json_lobby.gameState, 0, 0)
+    }
   console.log(json_lobby);
 });
 
@@ -40,6 +48,8 @@ function updateGameStateMessage(state, part, total) {
             messageElement.textContent = 'Waiting for '+ part + '/' + total + ' players to ready up...';
             messageElement.style.background = '#4a4a4a';
             closeRanking();
+            closeMatchModal();
+            matches = [];
             break;
         case 'SELECT':
             messageElement.textContent = 'Waiting for '+ part + '/' + total + ' players to make a Selection...';
@@ -53,8 +63,9 @@ function updateGameStateMessage(state, part, total) {
             messageElement.style.background = '#2196F3';
             break;
         case 'DISPLAY':
-            messageElement.textContent = 'Game has ended';
+            messageElement.textContent = 'Final Matches Have Been Computed!';
             messageElement.style.background = '#f44336';
+            showMatchModal();
             break;
         default:
             messageElement.textContent = '';
@@ -156,7 +167,6 @@ function closeRanking() {
 }
 
 
-let oppositeGenderPlayers;
 function loadRankingUI() {
     const rankingHTML = `
     <h2 style="text-align:center;">Rank the Players</h2>
@@ -243,6 +253,46 @@ function updatePlayersSidePanel() {
         const playerElement = createPlayerElement(player);
         container.appendChild(playerElement);
     });
+}
+
+function showMatchModal() {
+    currentMatchIndex = 0;
+    document.getElementById("matchModal").style.display = "flex";
+    renderMatch();
+}
+
+function closeMatchModal() {
+    document.getElementById("matchModal").style.display = "none";
+}
+
+function renderMatch() {
+    const match = matches[currentMatchIndex];
+    if (!match) return;
+
+    document.getElementById("matchExclaimer").innerText = match.exclaimer;
+
+    const profilesHTML = `
+    <div class="profile">
+      <img src="${match.user1.userimage}" alt="${match.user1.username}">
+      <strong>${match.user1.username}</strong>
+    </div>
+    <div class="profile">
+      <img src="${match.user2.userimage}" alt="${match.user2.username}">
+      <strong>${match.user2.username}</strong>
+    </div>
+  `;
+
+    document.getElementById("matchProfiles").innerHTML = profilesHTML;
+}
+
+function nextMatch() {
+    currentMatchIndex++;
+    if (currentMatchIndex >= matches.length) {
+        alert("No more matches!");
+        closeMatchModal();
+    } else {
+        renderMatch();
+    }
 }
 
 
