@@ -198,21 +198,21 @@ function loadRankingUI() {
 
     window.moveUp = (index) => {
         if (index > 0) {
-            [players[index - 1], players[index]] = [players[index], players[index - 1]];
+            [oppositeGenderPlayers[index - 1], oppositeGenderPlayers[index]] = [oppositeGenderPlayers[index], oppositeGenderPlayers[index - 1]];
             renderPlayers();
         }
     };
 
     window.moveDown = (index) => {
-        if (index < players.length - 1) {
-            [players[index + 1], players[index]] = [players[index], players[index + 1]];
+        if (index < oppositeGenderPlayers.length - 1) {
+            [oppositeGenderPlayers[index + 1], oppositeGenderPlayers[index]] = [oppositeGenderPlayers[index], oppositeGenderPlayers[index + 1]];
             renderPlayers();
         }
     };
 
     document.getElementById("submitBtn").addEventListener("click", () => {
         const payload = {
-            rankings: players.map(p => p.username)
+            rankings: oppositeGenderPlayers.map(p => p.username)
         };
         fetch("/select", {
             method: "POST",
