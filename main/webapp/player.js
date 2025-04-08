@@ -1,6 +1,7 @@
 let messages = [];
 let players;
 let ranking_json;
+let isMale;
 
 //websocket endpoint to receive events when a lobby is created/modified
 const lobby_API = "http://localhost:8080/lobby";
@@ -16,35 +17,42 @@ socket.addEventListener("message", (event) => {
         players.push(user);
     }
     updatePlayersSidePanel();
-    updateGameStateMessage(json_lobby.gameState);
 
-    console.log(json_lobby);
+    //update game state
+    if(json_lobby.gameState === 'READYUP')
+        updateGameStateMessage(json_lobby.gameState, json_lobby.usersReady, json_lobby.maxPlayers);
+    else if(json_lobby.gameState === 'SELECT')
+        updateGameStateMessage(json_lobby.gameState, json_lobby.usersSelected, json_lobby.maxPlayers);
+    else if(json_lobby.gameState === 'MATCHING')
+        updateGameStateMessage(json_lobby.gameState, 0, 0)
+  console.log(json_lobby);
 });
 
 let gameState = '';
 
 //Message displaying the game state to the entire lobby
-function updateGameStateMessage(state) {
+function updateGameStateMessage(state, part, total) {
     const messageElement = document.getElementById('gameStateMessage');
     gameState = state;
 
     switch(state) {
         case 'READYUP':
-            messageElement.textContent = 'Waiting for players to ready up...';
+            messageElement.textContent = 'Waiting for '+ part + '/' + total + ' players to ready up...';
             messageElement.style.background = '#4a4a4a';
-            clearMiddle();
+            closeRanking();
             break;
         case 'SELECT':
-            messageElement.textContent = 'Game is starting...Please make a Selection';
+            messageElement.textContent = 'Waiting for '+ part + '/' + total + ' players to make a Selection...';
             messageElement.style.background = '#4CAF50';
-            updatePlayersMiddle();
             ranking_json =[]
+            if(isMale!==undefined)
+                showRanking();
             break;
-        case 'DISPLAY':
-            messageElement.textContent = 'Game in progress';
+        case 'MATCHING':
+            messageElement.textContent = 'Processing All Selections, generating Perfect Matches';
             messageElement.style.background = '#2196F3';
             break;
-        case 'FINISHED':
+        case 'DISPLAY':
             messageElement.textContent = 'Game has ended';
             messageElement.style.background = '#f44336';
             break;
@@ -53,9 +61,6 @@ function updateGameStateMessage(state) {
             messageElement.style.display = 'none';
     }
 }
-// Set initial game state
-updateGameStateMessage('READYUP');
-
 
 /*
 Player is a json representation of our user in the backend
@@ -86,7 +91,6 @@ function createPlayerElement(player) {
     return playerInfo;
 }
 
-let isMale;
 function toggleReady() {
     //fetch get request to invert isReady which is initially false, and retrieve whether or not user is boy/girl for middle
     let endpoint = url+"ready";
@@ -140,88 +144,87 @@ players = [
 
 updatePlayers(players);
  */
-function clearMiddle() {
-    const playersGrid = document.getElementById('playersGrid');
-    playersGrid.innerHTML = '';
+
+//Modal Ranking Component
+function showRanking() {
+    document.getElementById("rankingModal").style.display = "flex";
+    loadRankingUI();
 }
-function updatePlayersMiddle(){
 
-    // For center grid, only show opposite gender. We init isMale from above function of readying up
-    const oppositeGenderPlayers = players.filter(player => !(player.isMale===isMale));
-    /*
-    oppositeGenderPlayers.forEach(player => {
-        const playerContainer = document.createElement('div');
-        playerContainer.className = 'player-container';
+function closeRanking() {
+    document.getElementById("rankingModal").style.display = "none";
+}
 
-        const playerImg = document.createElement('img');
-        playerImg.src = player.userimage;
-        playerImg.className = 'player-thumbnail';
 
-        const rankingContainer = document.createElement('div');
-        rankingContainer.className = 'ranking';
+let oppositeGenderPlayers;
+function loadRankingUI() {
+    const rankingHTML = `
+    <h2 style="text-align:center;">Rank the Players</h2>
+    <div class="player-list" id="playerList"></div>
+    <button id="submitBtn">Submit Rankings</button>
+  `;
 
-        const totalPlayers = players.length;
-        const rankingButtons = Math.floor(totalPlayers / 2);
-        for (let i = 1; i <= rankingButtons; i++) {
-            const button = document.createElement('button');
-            button.className = 'rank-button';
-            const ordinal = i === 1 ? '1st' : i === 2 ? '2nd' : i === 3 ? '3rd' : `${i}th`;
-            button.textContent = ordinal;
-            button.onclick = () => rankPlayer(player.username, ordinal);
-            rankingContainer.appendChild(button);
+    document.getElementById("rankingContainer").innerHTML = rankingHTML;
+
+
+    if(isMale)
+        oppositeGenderPlayers=players.filter(player => !player.isMale)
+    else
+        oppositeGenderPlayers=players.filter(player => player.isMale)
+
+
+
+    const playerList = document.getElementById('playerList');
+
+    function renderPlayers() {
+        playerList.innerHTML = "";
+        oppositeGenderPlayers.forEach((player, index) => {
+            console.log("Index: " + index+ ", Player: " +player);
+            const card = document.createElement('div');
+            card.className = 'player-card';
+            card.innerHTML = `
+        <div class="player-info">
+          <img src="${player.userimage}" alt="${player.username}" />
+          <span>${index + 1}. ${player.username}</span>
+        </div>
+        <div class="controls">
+          <button onclick="moveUp(${index})">⬆</button>
+          <button onclick="moveDown(${index})">⬇</button>
+        </div>
+      `;
+            playerList.appendChild(card);
+        });
+    }
+
+    window.moveUp = (index) => {
+        if (index > 0) {
+            [players[index - 1], players[index]] = [players[index], players[index - 1]];
+            renderPlayers();
         }
-
-        playerContainer.appendChild(playerImg);
-        playerContainer.appendChild(rankingContainer);
-        document.getElementById('playersGrid').appendChild(playerContainer);
-    });
-    */
-    const form = document.createElement('form');
-    form.className = 'ranking-form';
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        console.log(form)
     };
 
-    oppositeGenderPlayers.forEach(player => {
-        const playerContainer = document.createElement('div');
-        playerContainer.className = 'player-container';
-
-        const playerImg = document.createElement('img');
-        playerImg.src = player.userimage;
-        playerImg.className = 'player-thumbnail';
-
-        const rankSelect = document.createElement('select');
-        rankSelect.className = 'rank-select';
-        rankSelect.name = player.username;
-        rankSelect.required = true;
-
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Select rank';
-        rankSelect.appendChild(defaultOption);
-
-        const totalPlayers = players.length;
-        const rankingOptions = Math.floor(totalPlayers / 2);
-        for (let i = 1; i <= rankingOptions; i++) {
-            const option = document.createElement('option');
-            option.value = i.toString();
-            option.textContent = i.toString();
-            rankSelect.appendChild(option);
+    window.moveDown = (index) => {
+        if (index < players.length - 1) {
+            [players[index + 1], players[index]] = [players[index], players[index + 1]];
+            renderPlayers();
         }
-        playerContainer.appendChild(playerImg);
-        playerContainer.appendChild(rankSelect);
-        form.appendChild(playerContainer);
+    };
+
+    document.getElementById("submitBtn").addEventListener("click", () => {
+        const payload = {
+            rankings: players.map(p => p.username)
+        };
+        fetch("/select", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            alert("Rankings submitted!");
+            closeRanking();
+        }).catch(err => console.error("Submission failed, Please try again", err));
     });
 
-    // Add a single submit button at the bottom
-    const submitButton = document.createElement('button');
-    submitButton.type = 'submit';
-    submitButton.textContent = 'Submit All Rankings';
-    submitButton.className = 'submit-rankings-button';
-    form.appendChild(submitButton);
-
-    document.getElementById('playersGrid').appendChild(form);
+    renderPlayers();
 }
 
 function updatePlayersSidePanel() {

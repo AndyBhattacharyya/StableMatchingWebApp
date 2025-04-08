@@ -95,45 +95,6 @@ body {
     gap: 5px;
 }
 
-.ranking {
-    display: flex;
-    gap: 5px;
-}
-
-.rank-button {
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.rank-button:hover {
-    background: #e0e0e0;
-}
-
-.rank-button.selected {
-    background: #4CAF50;
-    color: white;
-    border-color: #45a049;
-}
-
-.submit-rankings-button {
-    margin-top: 20px;
-    width: 200px;
-    padding: 12px;
-    background: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.submit-rankings-button:hover {
-    background: #1976D2;
-}
 
 .chat-area {
     grid-column: 1 / span 3;
@@ -180,4 +141,71 @@ body {
 
 .chat-input button:hover {
     background: #45a049;
+}
+
+#rankingModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+#rankingContent {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#closeRanking {
+    float: right;
+    background: crimson;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Player card layout */
+.player-list {
+    margin-top: 20px;
+}
+
+.player-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-info img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+}
+
+.controls button {
+    padding: 6px 12px;
+    margin: 4px 0;
 }
