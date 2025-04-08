@@ -148,6 +148,7 @@ function updatePlayersMiddle(){
 
     // For center grid, only show opposite gender. We init isMale from above function of readying up
     const oppositeGenderPlayers = players.filter(player => !(player.isMale===isMale));
+    /*
     oppositeGenderPlayers.forEach(player => {
         const playerContainer = document.createElement('div');
         playerContainer.className = 'player-container';
@@ -174,16 +175,55 @@ function updatePlayersMiddle(){
         playerContainer.appendChild(rankingContainer);
         document.getElementById('playersGrid').appendChild(playerContainer);
     });
+    */
+    const form = document.createElement('form');
+    form.className = 'ranking-form';
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        console.log(form)
+    };
+
+    oppositeGenderPlayers.forEach(player => {
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'player-container';
+
+        const playerImg = document.createElement('img');
+        playerImg.src = player.userimage;
+        playerImg.className = 'player-thumbnail';
+
+        const rankSelect = document.createElement('select');
+        rankSelect.className = 'rank-select';
+        rankSelect.name = player.username;
+        rankSelect.required = true;
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select rank';
+        rankSelect.appendChild(defaultOption);
+
+        const totalPlayers = players.length;
+        const rankingOptions = Math.floor(totalPlayers / 2);
+        for (let i = 1; i <= rankingOptions; i++) {
+            const option = document.createElement('option');
+            option.value = i.toString();
+            option.textContent = i.toString();
+            rankSelect.appendChild(option);
+        }
+        playerContainer.appendChild(playerImg);
+        playerContainer.appendChild(rankSelect);
+        form.appendChild(playerContainer);
+    });
 
     // Add a single submit button at the bottom
     const submitButton = document.createElement('button');
-    submitButton.textContent = 'Submit Rankings';
+    submitButton.type = 'submit';
+    submitButton.textContent = 'Submit All Rankings';
     submitButton.className = 'submit-rankings-button';
-    submitButton.onclick = submitRankings;
-    document.getElementById('playersGrid').appendChild(submitButton);
+    form.appendChild(submitButton);
 
-
+    document.getElementById('playersGrid').appendChild(form);
 }
+
 function updatePlayersSidePanel() {
     // Clear existing players
     document.getElementById('malePlayers').innerHTML = '';
@@ -202,27 +242,6 @@ function updatePlayersSidePanel() {
     });
 }
 
-function rankPlayer(username, rank) {
-    // Clear previous ranking only for this player
-    const playerButtons = document.querySelectorAll(`.player-container:has(img[src*="${username}"]) .rank-button`);
-    playerButtons.forEach(button => {
-        button.classList.remove('selected');
-    });
-
-    // Update UI for this player's new ranking
-    playerButtons.forEach(button => {
-        if (button.textContent === rank) {
-            button.classList.add('selected');
-        }
-    });
-    // Here you can implement the backend call to save the ranking
-    console.log(`Ranked ${username} as ${rank}`);
-    ranking_json[rank] = username;
-};
-
-function submitRankings() {
-    console.log('Rankings to submit:', ranking_json);
-}
 
 function sendMessage() {
     const input = document.getElementById('messageInput');

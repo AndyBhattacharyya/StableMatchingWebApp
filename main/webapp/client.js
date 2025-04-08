@@ -12,6 +12,7 @@ let json_lobbies;
 socket.addEventListener("message", (event) => {
     //web socket returns an array of lobbies
     json_lobbies = JSON.parse(event.data);
+    console.log(json_lobbies);
     for(let lobby of json_lobbies.lobbies){
         let lobby_key = lobby.host;
         let newLobby = {
@@ -25,7 +26,6 @@ socket.addEventListener("message", (event) => {
         //lobbies.push(newLobby);
         updateLobbiesList()
     }
-    console.log(json_lobbies);
 });
 
 
