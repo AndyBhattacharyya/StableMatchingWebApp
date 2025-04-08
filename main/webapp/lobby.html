@@ -1,10 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Game Lobby Room</title>
+    <link href="lobby.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+<div id="gameStateMessage" class="game-state-message"></div>
+<div class="lobby-container">
+    <div class="player-side left" id="malePlayers">
+        <!-- Male players will be added here dynamically -->
+    </div>
 
+    <div class="center-area">
+        <h2>Players in Lobby</h2>
+        <div class="players-grid" id="playersGrid">
+            <!-- Players will be added here dynamically -->
+        </div>
+    </div>
+
+    <div class="player-side right" id="femalePlayers">
+        <!-- Female players will be added here dynamically -->
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+<script src="player.js"></script>
 </body>
 </html>
