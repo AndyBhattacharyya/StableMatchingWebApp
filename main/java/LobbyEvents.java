@@ -1,3 +1,5 @@
+import MatchingGame.User;
+import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.*;
 import jakarta.websocket.server.HandshakeRequest;
 import jakarta.websocket.server.ServerEndpoint;
@@ -10,7 +12,6 @@ import java.io.IOException;
 
 @ServerEndpoint(value = "/lobby", configurator = CustomConfigurator.class)
 public class LobbyEvents {
-
     /*
     Objective:
      */
@@ -34,14 +35,28 @@ public class LobbyEvents {
             return;
         }
         //Access corresponding HttpSession to put output object
-        CreateOrJoinLobby.userSessionsMap.get(JSESSIONID).setAttribute("out", session.getBasicRemote());
+        HttpSession tmp= CreateOrJoinLobby.userSessionsMap.get(JSESSIONID);
+        User usertmp = (User)tmp.getAttribute("user");
+        try {
+            usertmp.setOut(session.getBasicRemote());
+        } catch (NullPointerException e) {
+            onClose(session);
+            return;
+        }
         System.out.println("Set out for user: " + JSESSIONID);
+        try {
+            CreateOrJoinLobby.broadcastLobbyToUsers(usertmp);
+        }catch(IOException e) {
+            System.out.println("Error with broadcast");
+        }
     }
     @OnClose
     public void onClose(Session session) {
         System.out.println("WebSocket lobby closed: " + session.getId());
-        //Delete corresponding HttpSession to put output object
-        CreateOrJoinLobby.userSessionsMap.remove(JSESSIONID);
+        //Handle the out set for User being invalid, setting it to null
+        HttpSession tmp= CreateOrJoinLobby.userSessionsMap.get(JSESSIONID);
+        User usertmp = (User)tmp.getAttribute("user");
+        usertmp.setOut(null);
         System.out.println("Removed user from userSessionsMap: " + JSESSIONID);
     }
 }

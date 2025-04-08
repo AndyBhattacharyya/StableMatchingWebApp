@@ -26,6 +26,13 @@ public class CreateOrJoinLobby extends HttpServlet {
      */
     public static HashMap<String, User> LOBBIES = new HashMap<>();
     public static HashMap<String, HttpSession> userSessionsMap = new HashMap<>();
+    public static void broadcastLobbyToUsers(User user) throws IOException {
+        for(HttpSession userSessions: userSessionsMap.values()){
+            if(user == userSessions.getAttribute("user")){
+                user.getLobby().broadcastLobbyToUsers();
+            }
+        }
+    }
     private static Set<RemoteEndpoint.Basic> LISTENERS = new HashSet<>();
     public static void registerListener(RemoteEndpoint.Basic listener) throws IOException {
         LISTENERS.add(listener);
@@ -43,7 +50,7 @@ public class CreateOrJoinLobby extends HttpServlet {
     public static void unregisterListener(RemoteEndpoint.Basic listener) {
         LISTENERS.remove(listener);
     }
-    public static void broadcast() throws IOException {
+    public static void broadcastLobbies() throws IOException {
         //Build json representation of lobbies
         JSONObject lobbies_rep = new JSONObject();
         ArrayList<Lobby> json_lobbies = new ArrayList<>();
@@ -168,8 +175,8 @@ public class CreateOrJoinLobby extends HttpServlet {
      if(action.equalsIgnoreCase("create")) {
          //create lobby logic here
          if(maxPlayers!=-1) {
-             new UserCreateLobbyEvent(user, lobbyName, maxPlayers);
              LOBBIES.put(lobbyName, user);
+             new UserCreateLobbyEvent(user, lobbyName, maxPlayers);
          }
      }
      else if(action.equalsIgnoreCase("join")) {
@@ -179,7 +186,7 @@ public class CreateOrJoinLobby extends HttpServlet {
              new UserJoinLobbyEvent(user, lobby);
          }
      }
-         broadcast();
+         broadcastLobbies();
          res.sendRedirect("/lobby.html");
     }
 
